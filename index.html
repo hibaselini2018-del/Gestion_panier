@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Projet 1 : Gestion de panier</title>
+  <style>
+    /* Style de la page (CSS) */
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f4f6f9;
+      margin: 0;
+      padding: 20px;
+    }
+
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
+      background: #ffffff;
+      padding: 25px;
+      border-radius: 8px;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    }
+
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 2px solid #eeeeee;
+      padding-bottom: 15px;
+      margin-bottom: 20px;
+    }
+
+    h1 {
+      margin: 0;
+      color: #333;
+      font-size: 24px;
+    }
+
+    .menu-icon {
+      font-size: 24px;
+      cursor: pointer;
+    }
+
+    /* Formulaire d'ajout de produit */
+    .add-product-form {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+
+    .add-product-form input {
+      padding: 10px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      flex: 1;
+    }
+
+    .btn-add {
+      background-color: #28a745;
+      color: white;
+      border: none;
+      padding: 10px 15px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-weight: bold;
+    }
+
+    .btn-add:hover {
+      background-color: #218838;
+    }
+
+    /* Tableau de la liste des produits */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 20px;
+    }
+
+    th, td {
+      padding: 12px;
+      text-align: left;
+      border-bottom: 1px solid #ddd;
+    }
+
+    th {
+      background-color: #f8f9fa;
+      color: #555;
+    }
+
+    .qty-btn {
+      background-color: #007bff;
+      color: white;
+      border: none;
+      width: 28px;
+      height: 28px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 16px;
+      font-weight: bold;
+    }
+
+    .qty-btn:hover {
+      background-color: #0056b3;
+    }
+
+    .btn-delete {
+      background-color: #dc3545;
+      color: white;
+      border: none;
+      padding: 6px 10px;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+
+    .btn-delete:hover {
+      background-color: #c82333;
+    }
+
+    .total-section {
+      text-align: right;
+      font-size: 18px;
+      font-weight: bold;
+      margin-bottom: 20px;
+    }
+
+    /* Bouton Valider Achat / Payer */
+    .cart-footer {
+      display: flex;
+      justify-content: flex-end;
+    }
+
+    .btn-pay {
+      background-color: #007bff;
+      color: white;
+      border: none;
+      padding: 12px 25px;
+      font-size: 16px;
+      font-weight: bold;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+
+    .btn-pay:hover {
+      background-color: #0056b3;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <!-- En-tête -->
+    <header>
+      <div class="menu-icon">☰ Menu</div>
+      <h1>Projet : Gestion de panier 🛒</h1>
+    </header>
+
+    <!-- Formulaire : Ajouter un produit -->
+    <div class="add-product-form">
+      <input type="text" id="prod-name" placeholder="Nom du produit (ex: PC Portable)">
+      <input type="number" id="prod-price" placeholder="Prix (ex: 1000 DT)">
+      <button class="btn-add" onclick="Ajouter()">Ajouter au panier</button>
+    </div>
+
+    <!-- Liste des produits dans le panier -->
+    <table>
+      <thead>
+        <tr>
+          <th>Produit</th>
+          <th>Prix</th>
+          <th>Quantité</th>
+          <th>Total</th>
+          <th>Action</th>
+        </tr>
+      </thead>
+      <tbody id="cart-list">
+        <!-- Produits initiaux d'exemple -->
+        <tr data-id="1">
+          <td>PC Portable</td>
+          <td><span class="price">1000</span> DT</td>
+          <td>
+            <button class="qty-btn" onclick="update_produit(1, -1)">-</button>
+            <span class="qty">1</span>
+            <button class="qty-btn" onclick="update_produit(1, 1)">+</button>
+          </td>
+          <td class="item-total">1000 DT</td>
+          <td><button class="btn-delete" onclick="supprimer_produit(1)">Supprimer</button></td>
+        </tr>
+      </tbody>
+    </table>
+
+    <!-- Affichage du Total -->
+    <div class="total-section">
+      Total à payer : <span id="cart-total">1000</span> DT
+    </div>
+
+    <!-- Bouton Valider l'achat / Payer -->
+    <div class="cart-footer">
+      <button class="btn-pay" onclick="validerLachat()">Valider Achat / Payer</button>
+    </div>
+  </div>
+
+  <!-- JavaScript (Logique des fonctions du panier) -->
+  <script>
+    let currentId = 2;
+
+    // Fonction pour recalculer le total global
+    function recalculerTotal() {
+      let totalGlobal = 0;
+      const rows = document.querySelectorAll('#cart-list tr');
+      rows.forEach(row => {
+        const price = parseFloat(row.querySelector('.price').innerText);
+        const qty = parseInt(row.querySelector('.qty').innerText);
+        const totalLine = price * qty;
+        row.querySelector('.item-total').innerText = totalLine + ' DT';
+        totalGlobal += totalLine;
+      });
+      document.getElementById('cart-total').innerText = totalGlobal;
+    }
+
+    // Besoins fonctionnels : Ajouter()
+    function Ajouter() {
+      const nameInput = document.getElementById('prod-name');
+      const priceInput = document.getElementById('prod-price');
+
+      const name = nameInput.value.trim();
+      const price = parseFloat(priceInput.value);
+
+      if (!name || isNaN(price) || price <= 0) {
+        alert("Veuillez saisir un nom de produit et un prix valide.");
+        return;
+      }
+
+      const tbody = document.getElementById('cart-list');
+      const newRow = document.createElement('tr');
+      newRow.setAttribute('data-id', currentId);
+
+      newRow.innerHTML = `
+        <td>${name}</td>
+        <td><span class="price">${price}</span> DT</td>
+        <td>
+          <button class="qty-btn" onclick="update_produit(${currentId}, -1)">-</button>
+          <span class="qty">1</span>
+          <button class="qty-btn" onclick="update_produit(${currentId}, 1)">+</button>
+        </td>
+        <td class="item-total">${price} DT</td>
+        <td><button class="btn-delete" onclick="supprimer_produit(${currentId})">Supprimer</button></td>
+      `;
+
+      tbody.appendChild(newRow);
+      currentId++;
+
+      // Réinitialiser les champs
+      nameInput.value = '';
+      priceInput.value = '';
+
+      recalculerTotal();
+    }
+
+    // Besoins fonctionnels : update_produit() (Modifier quantité + / -)
+    function update_produit(id, change) {
+      const row = document.querySelector(`tr[data-id="${id}"]`);
+      if (!row) return;
+
+      const qtySpan = row.querySelector('.qty');
+      let currentQty = parseInt(qtySpan.innerText);
+      currentQty += change;
+
+      if (currentQty <= 0) {
+        supprimer_produit(id);
+      } else {
+        qtySpan.innerText = currentQty;
+        recalculerTotal();
+      }
+    }
+
+    // Besoins fonctionnels : Supprimer un produit
+    function supprimer_produit(id) {
+      const row = document.querySelector(`tr[data-id="${id}"]`);
+      if (row) {
+        row.remove();
+        recalculerTotal();
+      }
+    }
+
+    // Besoins fonctionnels : Valider l'achat (onclick)
+    function validerLachat() {
+      const total = document.getElementById('cart-total').innerText;
+      if (parseFloat(total) === 0 || document.querySelectorAll('#cart-list tr').length === 0) {
+        alert("Votre panier est vide !");
+      } else {
+        alert("Achat validé avec succès ! Montant total : " + total + " DT");
+      }
+    }
+  </script>
+</body>
+</html>
